@@ -1,10 +1,9 @@
 import { supabase } from '../lib/supabase';
 
 export const authService = {
-  signUp: async (email, password, fullName) => {
+  signUp: async (email, fullName) => {
     const { data, error } = await supabase.auth.signUp({
       email,
-      password,
       options: {
         data: {
           full_name: fullName,
@@ -14,10 +13,21 @@ export const authService = {
     return { data, error };
   },
 
-  signIn: async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+  signInWithOtp: async (email) => {
+    const { data, error } = await supabase.auth.signInWithOtp({
       email,
-      password,
+      options: {
+        shouldCreateUser: true,
+      },
+    });
+    return { data, error };
+  },
+
+  verifyOtp: async (email, token) => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
     });
     return { data, error };
   },
