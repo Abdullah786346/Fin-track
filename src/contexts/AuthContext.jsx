@@ -22,18 +22,13 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email, fullName) => {
-    const { data, error } = await authService.signUp(email, fullName);
+  const signUp = async (email, password, fullName) => {
+    const { data, error } = await authService.signUp(email, password, fullName);
     return { data, error };
   };
 
-  const signInWithOtp = async (email) => {
-    const { data, error } = await authService.signInWithOtp(email);
-    return { data, error };
-  };
-
-  const verifyOtp = async (email, token) => {
-    const { data, error } = await authService.verifyOtp(email, token);
+  const signIn = async (email, password) => {
+    const { data, error } = await authService.signIn(email, password);
     return { data, error };
   };
 
@@ -44,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signInWithOtp, verifyOtp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
