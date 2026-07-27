@@ -3,7 +3,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Signup = ({ onSignup }) => {
   const { signUp } = useAuth();
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -13,11 +12,6 @@ const Signup = ({ onSignup }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!fullName.trim()) {
-      setError('Full name is required');
-      return;
-    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -31,13 +25,13 @@ const Signup = ({ onSignup }) => {
 
     setLoading(true);
 
-    const { data, error } = await signUp(email, password, fullName);
+    const { data, error } = await signUp(email, password);
     setLoading(false);
 
     if (error) {
       setError(error.message);
     } else {
-      setError('Check your email for verification code!');
+      onSignup(data.user);
     }
   };
 
@@ -51,20 +45,6 @@ const Signup = ({ onSignup }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
-                placeholder="John Doe"
-              />
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Email
