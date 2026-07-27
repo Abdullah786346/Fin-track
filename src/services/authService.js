@@ -1,30 +1,64 @@
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   signOut, 
   onAuthStateChanged,
   updateProfile 
 } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export const authService = {
-  signUp: async (email, password, fullName) => {
+  sendSignInLink: async (email, fullName) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      // Update user profile with display name
-      await updateProfile(userCredential.user, {
-        displayName: fullName
-      });
-      return { data: { user: userCredential.user }, error: null };
+      const actionCodeSettings = {
+        url: window.location.origin + '/login',
+        handleCodeInApp: true,
+      };
+      
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      
+      // Save email and name for later use
+      window.localStorage.setItem('emailForSignIn', email);
+      window.localStorage.setItem('fullNameForSignIn', fullName);
+      
+      return { data: { success: true }, error: null };
     } catch (error) {
       return { data: null, error };
     }
   },
 
-  signIn: async (email, password) => {
+  completeSignIn: async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return { data: { user: userCredential.user }, error: null };
+      if (isSignInWithEmailLink(auth, window.location.href)) {
+        let email = window.localStorage.getItem('emailForSignIn');
+        const fullName = window.localStorage.getItem('fullNameForSignIn');
+        
+        if (!email) {
+          email = window.prompt('Please provide your email for confirmation');
+        }
+        
+        const result = await signInWithEmailLink(auth, email, window.location.href);
+        
+        // Clear localStorage
+        window.localStorage.removeItem('emailForSignIn');
+        window.localStorage.removeItem('fullNameForSignIn');
+        
+        // Save user data to Firestore
+        if (result.user && fullName) {
+          await updateProfile(result.user, { displayName: fullName });
+          await setDoc(doc(db, 'users', result.user.uid), {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: fullName,
+            createdAt: new Date().toISOString(),
+          }, { merge: true });
+        }
+        
+        return { data: { user: result.user }, error: null };
+      }
+      return { data: null, error: new Error('Invalid sign-in link') };
     } catch (error) {
       return { data: null, error };
     }
@@ -53,5 +87,18 @@ export const authService = {
       callback(user);
     });
     return unsubscribe;
+  },
+
+  getUserData: async (uid) => {
+    try {
+      const docRef = doc(db, 'users', uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { data: docSnap.data(), error: null };
+      }
+      return { data: null, error: new Error('User not found') };
+    } catch (error) {
+      return { data: null, error };
+    }
   }
 };

@@ -8,6 +8,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if user is signing in with email link
+    authService.completeSignIn().then(({ data, error }) => {
+      if (data && data.user) {
+        setUser(data.user);
+      }
+      setLoading(false);
+    });
+
     // Listen for auth changes
     const unsubscribe = authService.onAuthStateChange((user) => {
       setUser(user);
@@ -17,13 +25,8 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const signUp = async (email, password, fullName) => {
-    const { data, error } = await authService.signUp(email, password, fullName);
-    return { data, error };
-  };
-
-  const signIn = async (email, password) => {
-    const { data, error } = await authService.signIn(email, password);
+  const sendSignInLink = async (email, fullName) => {
+    const { data, error } = await authService.sendSignInLink(email, fullName);
     return { data, error };
   };
 
@@ -34,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, sendSignInLink, signOut }}>
       {children}
     </AuthContext.Provider>
   );
