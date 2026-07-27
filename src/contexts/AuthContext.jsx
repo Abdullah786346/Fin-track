@@ -8,22 +8,17 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session
-    authService.getCurrentUser().then(({ user }) => {
-      setUser(user ?? null);
+    // Listen for auth changes
+    const unsubscribe = authService.onAuthStateChange((user) => {
+      setUser(user);
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const subscription = authService.onAuthStateChange((user) => {
-      setUser(user);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
-  const signUp = async (email, password) => {
-    const { data, error } = await authService.signUp(email, password);
+  const signUp = async (email, password, fullName) => {
+    const { data, error } = await authService.signUp(email, password, fullName);
     return { data, error };
   };
 

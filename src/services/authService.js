@@ -1,38 +1,57 @@
-import { supabase } from '../lib/supabase';
+import { auth } from '../lib/firebase';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  updateProfile 
+} from 'firebase/auth';
 
 export const authService = {
   signUp: async (email, password, fullName) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    return { data, error };
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Update user profile with display name
+      await updateProfile(userCredential.user, {
+        displayName: fullName
+      });
+      return { data: { user: userCredential.user }, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
   },
 
   signIn: async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return { data: { user: userCredential.user }, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
   },
 
   signOut: async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      await signOut(auth);
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
   },
 
   getCurrentUser: async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    return { user, error };
+    return new Promise((resolve) => {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        unsubscribe();
+        resolve({ user, error: null });
+      });
+    });
   },
 
   onAuthStateChange: (callback) => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        callback(session?.user ?? null);
-      }
-    );
-    return subscription;
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      callback(user);
+    });
+    return unsubscribe;
   }
 };

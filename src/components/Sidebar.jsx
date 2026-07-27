@@ -129,8 +129,8 @@ export const Sidebar = ({ page, setPage, collapsed, onToggle, mobileOpen, onClos
         <div className="border-t border-slate-200  px-4 py-4 flex-shrink-0">
           <div className={`flex items-center ${collapsed && !mobileOpen ? "justify-center" : "gap-3"}`}>
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-              {user?.user_metadata?.full_name
-                ? user.user_metadata.full_name
+              {user?.displayName
+                ? user.displayName
                     .split(" ")
                     .map((n) => n[0])
                     .join("")
@@ -140,7 +140,7 @@ export const Sidebar = ({ page, setPage, collapsed, onToggle, mobileOpen, onClos
             {(!collapsed || mobileOpen) && (
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-900  truncate">
-                  {user?.user_metadata?.full_name || "Name"}
+                  {user?.displayName || "Name"}
                 </p>
                 <p className="text-xs text-slate-500  truncate">
                   {user?.email || ""}
