@@ -9,6 +9,7 @@ export const authService = {
         data: {
           full_name: fullName,
         },
+        emailConfirm: false,
       },
     });
     return { data, error };
