@@ -12,6 +12,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
+  // Ensure user is authenticated locally
   if (!user) {
     return <Navigate to="/login" replace />;
   }

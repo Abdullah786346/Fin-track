@@ -2,127 +2,146 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Signup = ({ onSignup }) => {
-  const { sendSignInLink } = useAuth();
+  const { signUp } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [linkSent, setLinkSent] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (!fullName.trim()) {
-      setError('Full name is required');
+      setError('Full name is required.');
       return;
     }
 
     if (!email.trim()) {
-      setError('Email is required');
+      setError('Email address is required.');
+      return;
+    }
+
+    if (!password) {
+      setError('Password is required.');
+      return;
+    }
+
+    if (password.length < 4) {
+      setError('Password must be at least 4 characters long.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
     setLoading(true);
 
-    const { data, error } = await sendSignInLink(email, fullName);
+    const { data, error: signUpErr } = await signUp(email, password, fullName);
     setLoading(false);
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setLinkSent(true);
-      setError('Check your email for the sign-in link!');
+    if (signUpErr) {
+      setError(signUpErr.message);
+    } else if (data?.user) {
+      if (onSignup) {
+        onSignup(data.user);
+      } else {
+        window.location.href = '/';
+      }
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-white p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-white dark:from-slate-900 dark:to-slate-950 p-4 transition-colors duration-200">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 border border-slate-200 dark:border-slate-700">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-900">FinTrack</h1>
-            <p className="text-slate-500 mt-2">Create your account</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">FinTrack</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">Create your account to get started</p>
           </div>
 
-          {!linkSent ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
-                  placeholder="you@example.com"
-                />
-              </div>
-
-              {error && (
-                <div className={`p-3 rounded-lg text-sm ${
-                  error.includes('sign-in link') 
-                    ? 'bg-emerald-50 text-emerald-700' 
-                    : 'bg-red-50 text-red-700'
-                }`}>
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Sending...' : 'Send Sign-in Link'}
-              </button>
-            </form>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900">Check your email</h3>
-              <p className="text-slate-600">
-                We've sent a sign-in link to <strong>{email}</strong>
-              </p>
-              <p className="text-sm text-slate-500">
-                Click the link in the email to sign in to your account.
-              </p>
-              <button
-                onClick={() => {
-                  setLinkSent(false);
-                  setError('');
-                }}
-                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm"
-              >
-                Send another link
-              </button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none transition"
+                placeholder="John Doe"
+              />
             </div>
-          )}
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none transition"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={4}
+                className="w-full px-4 py-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none transition"
+                placeholder="Password"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={4}
+                className="w-full px-4 py-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none transition"
+                placeholder="Re-enter password"
+              />
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-xl text-sm border bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/30">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
 
           <div className="mt-6 text-center">
-            <p className="text-slate-600 text-sm">
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
               Already have an account?{' '}
-              <a href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">
+              <a href="/login" className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
                 Sign in
               </a>
             </p>
