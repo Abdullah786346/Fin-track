@@ -48,7 +48,7 @@ const ToggleSwitch = ({ checked, onChange }) => (
   - Added destructured settings props: currency, onCurrencyChange, and onResetAll.
   - Removed duplicate local currency state to use global parent state instead.
 */
-const SettingsPage = ({ dark, onToggleDark, currency, onCurrencyChange, onResetAll }) => {
+const SettingsPage = ({ currency, onCurrencyChange, onResetAll }) => {
   const [notifications, setNotifications] = useState({
     budget: true,
     weekly: false,
